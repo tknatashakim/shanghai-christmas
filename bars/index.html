@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>파워J. 타샤의 상하이 시크릿 바 BEST 5 가이드</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background: #0f1016; color: #fff; }
+    #map { width: 100%; height: 100%; z-index: 1; }
+    
+    /* Header Overlay */
+    .header-bar {
+      position: absolute; top: 16px; left: 16px; right: 16px; z-index: 1000;
+      background: rgba(22, 24, 34, 0.88); backdrop-filter: blur(16px);
+      padding: 14px 18px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .header-title h1 { font-size: 15px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px; }
+    .header-title p { font-size: 11px; color: #8e92a8; margin-top: 2px; }
+    .creator-badge {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b); color: #fff;
+      font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 12px;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+    }
+
+    /* Category Pill */
+    .filter-scroll {
+      position: absolute; top: 82px; left: 16px; right: 16px; z-index: 1000;
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px;
+      scrollbar-width: none;
+    }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+    .pill {
+      background: rgba(22, 24, 34, 0.85); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.12); color: #c4c7d8;
+      padding: 7px 14px; border-radius: 16px; font-size: 12px; font-weight: 600;
+      white-space: nowrap; cursor: pointer; transition: 0.2s;
+    }
+    .pill.active { background: #3b82f6; color: #fff; border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+
+    /* Custom Leaflet Marker */
+    .custom-pin {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #a855f7, #ec4899);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 20px; box-shadow: 0 0 20px rgba(236, 72, 153, 0.7);
+      border: 2px solid #fff; cursor: pointer; transition: transform 0.2s;
+    }
+    .custom-pin:hover { transform: scale(1.15); }
+    .custom-pin.active { background: linear-gradient(135deg, #f59e0b, #ef4444); box-shadow: 0 0 25px rgba(239, 68, 68, 0.9); }
+
+    /* Bottom Sheet Detail Card */
+    .bottom-sheet {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 1001;
+      background: rgba(20, 22, 32, 0.96); backdrop-filter: blur(24px);
+      border-top-left-radius: 28px; border-top-right-radius: 28px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 20px 20px 32px 20px; transform: translateY(110%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.7);
+      max-height: 80vh; overflow-y: auto;
+    }
+    .bottom-sheet.open { transform: translateY(0); }
+    .sheet-handle {
+      width: 36px; height: 4px; background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px; margin: 0 auto 16px auto; cursor: pointer;
+    }
+    .bar-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .bar-title { font-size: 19px; font-weight: 800; color: #fff; line-height: 1.3; }
+    .bar-subtitle { font-size: 13px; color: #94a3b8; margin-top: 3px; font-weight: 500; }
+    .close-btn {
+      background: rgba(255, 255, 255, 0.1); border: none; color: #fff;
+      width: 30px; height: 30px; border-radius: 50%; font-size: 15px; cursor: pointer;
+    }
+
+    /* Badges */
+    .badge-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+    .badge {
+      font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 8px;
+      background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .badge.gold { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
+
+    /* Secret Entrance Card */
+    .secret-box {
+      background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 14px; padding: 12px 14px; margin-bottom: 14px;
+    }
+    .secret-box-title { font-size: 12px; font-weight: 700; color: #c084fc; display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+    .secret-box-text { font-size: 13px; color: #e2e8f0; line-height: 1.45; }
+
+    /* Address & Copy */
+    .address-card {
+      background: rgba(255, 255, 255, 0.05); border-radius: 14px;
+      padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .address-text { font-size: 12px; color: #cbd5e1; max-width: 75%; line-height: 1.4; }
+    .copy-btn {
+      background: #3b82f6; border: none; color: #fff; font-size: 11px;
+      font-weight: 700; padding: 6px 12px; border-radius: 10px; cursor: pointer;
+    }
+
+    /* Action Buttons */
+    .nav-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .nav-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 13px; border-radius: 14px; font-size: 13px; font-weight: 700;
+      text-decoration: none; color: #fff; border: none; cursor: pointer;
+    }
+    .nav-btn.amap { background: linear-gradient(135deg, #0091ff, #0055ff); box-shadow: 0 4px 15px rgba(0, 145, 255, 0.35); }
+    .nav-btn.apple { background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.2); }
+
+    /* Toast */
+    .toast {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9);
+      background: rgba(0, 0, 0, 0.9); color: #fff; padding: 12px 22px; border-radius: 16px;
+      font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none; transition: 0.25s; z-index: 2000;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <div class="header-title">
+      <h1>🍸 상하이 시크릿 바 BEST 5</h1>
+      <p>파워J. 타샤의 엄선 스피크이지 지도</p>
+    </div>
+    <a href="https://instagram.com/tk__natasha" target="_blank" class="creator-badge">
+      @tk__natasha
+    </a>
+  </div>
+
+  <div class="filter-scroll">
+    <div class="pill active" onclick="filterBars('all')">전체 5곳</div>
+    <div class="pill" onclick="filterBars('speakeasy')">🚪 비밀 입구</div>
+    <div class="pill" onclick="filterBars('asia50')">🏆 아시아 50 바</div>
+    <div class="pill" onclick="filterBars('cocktail')">🍹 이색 칵테일</div>
+  </div>
+
+  <div id="map"></div>
+
+  <div class="bottom-sheet" id="bottomSheet">
+    <div class="sheet-handle" onclick="closeSheet()"></div>
+    <div class="bar-header">
+      <div>
+        <h2 class="bar-title" id="sheetTitle">바 이름</h2>
+        <p class="bar-subtitle" id="sheetSubtitle">영문명 · 중문명</p>
+      </div>
+      <button class="close-btn" onclick="closeSheet()">✕</button>
+    </div>
+
+    <div class="badge-row" id="sheetBadges"></div>
+
+    <div class="secret-box">
+      <div class="secret-box-title">🚪 비밀 입구 여는 법 (치트키)</div>
+      <div class="secret-box-text" id="sheetEntrance">비밀 입구 설명</div>
+    </div>
+
+    <div class="secret-box" style="background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.3);">
+      <div class="secret-box-title" style="color: #60a5fa;">🍹 시그니처 칵테일 & 추천 이유</div>
+      <div class="secret-box-text" id="sheetCocktail">시그니처 설명</div>
+    </div>
+
+    <div class="address-card">
+      <div class="address-text" id="sheetAddress">중문 주소</div>
+      <button class="copy-btn" onclick="copyAddress()">주소 복사</button>
+    </div>
+
+    <div class="nav-buttons">
+      <a href="#" target="_blank" class="nav-btn amap" id="amapLink">📍 고덕지도 열기</a>
+      <a href="#" target="_blank" class="nav-btn apple" id="appleLink">🗺️ 애플지도 열기</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">중문 주소가 복사되었습니다! 📋</div>
+
+  <script>
+    const BARS = [
+      {
+        id: 1,
+        name: "Project W (프로젝트 더블유)",
+        sub: "Project W · 自动售货机密室酒吧",
+        category: ["speakeasy", "cocktail"],
+        lat: 31.2185, lng: 121.4610,
+        badges: ["🚪 자판기 문", "🍹 금붕어 칵테일", "예산 100~130위안"],
+        entrance: "평범한 길거리 코카콜라 자판기가 문입니다. 자판기 우측의 특수 버튼을 누르면 문이 통째로 회전하며 붉은 조명의 네오 펑크 바가 나타나요!",
+        cocktail: "《최서호(醉西湖)》: 어항 같은 유리잔 속에 식용 꽃과 진짜 살아 헤엄치는 듯한 조각이 들어간 시각 충격 시그니처 칵테일.",
+        address: "上海市黄浦区陕西南路162-6号 (지하철 1/10/12호선 산시난루역 3번 출구)"
+      },
+      {
+        id: 2,
+        name: "Laundry Co. (런드리 코)",
+        sub: "Laundry Co. · 洗衣房复古酒吧",
+        category: ["speakeasy"],
+        lat: 31.2198, lng: 121.4585,
+        badges: ["🚪 드럼세탁기 문", "🧺 코인세탁소 위장", "예산 110~140위안"],
+        entrance: "실제 빨래가 돌아가는 24시 코인세탁소로 위장되어 있습니다. 안쪽 은색 대형 드럼세탁기 손잡이를 당겨 밀면 클래식한 유럽풍 스피크이지 공간이 펼쳐집니다.",
+        cocktail: "《세탁 세제 보틀 칵테일》: 귀여운 미니 세제통에 담겨 나오는 위트 있는 과일 베이스 칵테일.",
+        address: "上海市徐汇区襄阳北路218号 (산시난루 인근)"
+      },
+      {
+        id: 3,
+        name: "The Barber Shop (더 바버샵)",
+        sub: "The Barber Shop · 理发店威士忌吧",
+        category: ["speakeasy"],
+        lat: 31.2052, lng: 121.4498,
+        badges: ["🚪 이발소 거울 문", "💈 빈티지 바버샵", "예산 120~150위안"],
+        entrance: "실제 이발 의자와 가위가 놓인 레트로 바버샵입니다. 벽면에 걸린 대형 전신 거울의 프레임을 밀면 1920년대 금주령 시절의 고풍스러운 위스키 바가 열립니다.",
+        cocktail: "《Barber's Foam》: 면도 크림처럼 부드러운 화이트 폼이 올라간 스모키 버번 칵테일.",
+        address: "上海市徐汇区永嘉路615号 (헝산루 인근 융자루 카페거리)"
+      },
+      {
+        id: 4,
+        name: "Flask (플라스크)",
+        sub: "Flask · 可口可乐冰箱门酒吧",
+        category: ["speakeasy", "cocktail"],
+        lat: 31.2152, lng: 121.4580,
+        badges: ["🚪 빈티지 냉장고 문", "🥪 샌드위치 숍 위장", "예산 120~160위안"],
+        entrance: "낮에는 샌드위치를 파는 평범한 스낵바 'Tiger Bite'입니다. 구석의 낡은 빈티지 코카콜라 업소용 냉장고 손잡이를 당기면 웅장한 천장의 히든 바로 진입합니다.",
+        cocktail: "《Robin Hood Roy / Flask》: 두꺼운 빈티지 고서적 속에 숨겨진 스테인리스 힙 플라스크 병에서 아이스볼 잔으로 직접 따라 마시는 스모키 위스키 칵테일.",
+        address: "上海市徐汇区襄阳北路432号 (상하이 조계지 핵심 상권)"
+      },
+      {
+        id: 5,
+        name: "Speak Low (스피크 로우)",
+        sub: "Speak Low · 彼楼 (Asia 50 Best Bars)",
+        category: ["speakeasy", "asia50", "cocktail"],
+        lat: 31.2162, lng: 121.4645,
+        badges: ["🏆 아시아 50 베스트 바", "🚪 책장 비밀문", "예산 130~180위안"],
+        entrance: "1층은 바 텐더 용품을 파는 소품 숍 'Ocho'입니다. 한쪽 벽면의 책장을 옆으로 밀면 2층, 3층으로 이어지는 각기 다른 콘셉트의 전설적인 스피크이지 바가 나옵니다.",
+        cocktail: "《Speak Low》: 일본 전통 말차 격불 기법과 럼, 셰리 와인을 결합한 시그니처 칵테일. 세계 챔피언 신조 신고의 마스터피스.",
+        address: "上海市黄浦区复兴中路579号 (신톈디 인근)"
+      }
+    ];
+
+    // Initialize Leaflet Map (Dark theme centered on French Concession)
+    const map = L.map('map', { zoomControl: false }).setView([31.216, 121.458], 14);
+
+    // Esri High-Quality Dark Canvas Map (No API Key Required, Fast Global CDN)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16,
+      attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ'
+    }).addTo(map);
+
+    // Street names, subway lines & labels overlay
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16,
+      attribution: ''
+    }).addTo(map);
+
+    window.addEventListener('load', () => {
+      setTimeout(() => map.invalidateSize(), 200);
+    });
+
+    let markers = [];
+    let currentAddress = "";
+
+    function renderPins(filter) {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+
+      BARS.forEach(bar => {
+        if (filter !== 'all' && !bar.category.includes(filter)) return;
+
+        const customIcon = L.divIcon({
+          className: 'custom-pin-wrapper',
+          html: `<div class="custom-pin" id="pin-${bar.id}">🍸</div>`,
+          iconSize: [44, 44],
+          iconAnchor: [22, 22]
+        });
+
+        const marker = L.marker([bar.lat, bar.lng], { icon: customIcon }).addTo(map);
+        marker.on('click', () => openSheet(bar));
+        markers.push(marker);
+      });
+    }
+
+    function openSheet(bar) {
+      document.querySelectorAll('.custom-pin').forEach(p => p.classList.remove('active'));
+      const activePin = document.getElementById(`pin-${bar.id}`);
+      if (activePin) activePin.classList.add('active');
+
+      document.getElementById('sheetTitle').innerText = bar.name;
+      document.getElementById('sheetSubtitle').innerText = bar.sub;
+      document.getElementById('sheetEntrance').innerText = bar.entrance;
+      document.getElementById('sheetCocktail').innerText = bar.cocktail;
+      document.getElementById('sheetAddress').innerText = bar.address;
+      currentAddress = bar.address;
+
+      const badgeContainer = document.getElementById('sheetBadges');
+      badgeContainer.innerHTML = bar.badges.map(b => {
+        const isGold = b.includes('아시아') || b.includes('금붕어');
+        return `<span class="badge ${isGold ? 'gold' : ''}">${b}</span>`;
+      }).join('');
+
+      // High-res map links
+      document.getElementById('amapLink').href = `https://uri.amap.com/marker?position=${bar.lng},${bar.lat}&name=${encodeURIComponent(bar.name)}`;
+      document.getElementById('appleLink').href = `https://maps.apple.com/?q=${encodeURIComponent(bar.name)}&ll=${bar.lat},${bar.lng}`;
+
+      document.getElementById('bottomSheet').classList.add('open');
+      map.flyTo([bar.lat - 0.005, bar.lng], 15, { duration: 0.8 });
+    }
+
+    function closeSheet() {
+      document.getElementById('bottomSheet').classList.remove('open');
+      document.querySelectorAll('.custom-pin').forEach(p => p.classList.remove('active'));
+    }
+
+    function filterBars(category) {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      event.target.classList.add('active');
+      renderPins(category);
+      closeSheet();
+    }
+
+    function copyAddress() {
+      navigator.clipboard.writeText(currentAddress).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      });
+    }
+
+    renderPins('all');
+  </script>
+</body>
+</html>
